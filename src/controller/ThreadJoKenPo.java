@@ -1,95 +1,160 @@
 package controller;
 
 import java.util.concurrent.Semaphore;
-import view.Principal;
 
-public class ThreadJoKenPo extends Thread {	
-	private int ptA = 0;
-	private int ptB = 0;
-	
-	private String jogA;
-	private String jogB;
+public class ThreadJoKenPo extends Thread {
 
-	private Semaphore s = new Semaphore(1);
+	//controlar jogadores
+	private Semaphore s = new Semaphore(5);
+	private int idJogador;
+	private int time;
+	private int pos = -1;
 	
-	public ThreadJoKenPo(String jogadorA, String jogadorB) {
-		this.jogA = jogadorA;
-		this.jogB = jogadorB;
-	}
+	//controlar as batalhas
+	private static int batalhas;
+	private static int[][] jogo = new int[2][5];
+	private static int[][] duelosVencidos = new int[2][6];
+	private static int[][] oponente = new int[2][5];
+	private static int[] pontosTime = { 0, 0 };
 	
 	@Override
 	public void run() {
-		duelar();
+		try {
+			s.acquire();
+			escolheOp();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			s.release();
+			duelar();
+		}
+	}
+	
+	public ThreadJoKenPo(int id, int time) {
+		this.idJogador = id;
+		this.time = time;
+	}
+
+	private void escolheOp() {
+		while (pos < 0) {
+			int i = (int)(Math.random()* 5)+ 0;
+			if(oponente[time][i] < 1) {
+				oponente[time][i] = idJogador;
+				pos = i;
+			}
+		}
 	}
 
 	private void duelar() {
-		// se ganhador = 1
-		// jogador A ganhou
-
-		// se ganhador = 2
-		// jogador B ganhou
-
-		// se ganhador = 0
-		// empate
-		while(ptA<3&&ptB<3){
-			int ganhador = 0;
+		try {
+			sleep(2000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		if (time == 0) {
+			System.out.println("Time 1, Jogador " + oponente[0][pos] + " contra " + "Time 2, Jogador " + oponente[1][pos]);
+		}
+		while ((duelosVencidos[0][pos] < 3) && (duelosVencidos[1][pos] < 3)) {
+			jogo[time][pos] = (int) (Math.random() * 3) + 1;
+			if (time == 0) {
+				try {
+					sleep(200);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				switch (jogo[time][pos]) {
+				case 1:
+					switch (jogo[1][pos]) {
+					case 1:
+						System.out.println("Time 1, Jogador " + oponente[0][pos] + " - PEDRA | EMPATE | PEDRA - "
+								+ "Time 2, Jogador " + oponente[1][pos]);
+						break;
+					case 2:
+						System.out.println("Time 1, Jogador " + oponente[0][pos] + " - PEDRA | GANHOU Time 1, Jogador "
+								+ oponente[0][pos] + " | TESOURA - " + "TimeB: Jogador#" + oponente[1][pos]);
+						duelosVencidos[0][pos]++;
+						duelosVencidos[0][5]++;
+						break;
+					case 3:
+						System.out.println("TimeA: Jogador#" + oponente[0][pos] + " - PEDRA | GANHOU Time 2, Jogador "
+								+ oponente[1][pos] + " | PAPEL - " + "Time 2, Jogador " + oponente[1][pos]);
+						duelosVencidos[1][pos]++;
+						duelosVencidos[1][5]++;
+						break;
+					}
+					break;
+				case 2:
+					switch (jogo[1][pos]) {
+					case 1:
+						System.out.println("Time 1, Jogador " + oponente[0][pos] + " - TESOURA | GANHOU Time 2, Jogador "
+								+ oponente[1][pos] + " | PEDRA - " + "Time 2, Jogador " + oponente[1][pos]);
+						duelosVencidos[1][pos]++;
+						duelosVencidos[1][5]++;
+						break;
+					case 2:
+						System.out.println("Time 1, Jogador " + oponente[0][pos] + " - TESOURA | EMPATE | TESOURA - "
+								+ "Time 2, Jogador " + oponente[1][pos]);
+						break;
+					case 3:
+						System.out.println("Time 1, Jogador " + oponente[0][pos] + " - TESOURA | GANHOU Time 1, Jogador "
+								+ oponente[0][pos] + " | PAPEL - " + "Time 2, Jogador " + oponente[1][pos]);
+						duelosVencidos[0][pos]++;
+						duelosVencidos[0][5]++;
+						break;
+					}
+					break;
+				case 3:
+					switch (jogo[1][pos]) {
+					case 1:
+						System.out.println("Time 1, Jogador " + oponente[0][pos] + " - PAPEL | GANHOU Time 1, Jogador "
+								+ oponente[0][pos] + " | PEDRA - " + "Time 2, Jogador " + oponente[1][pos]);
+						duelosVencidos[0][pos]++;
+						duelosVencidos[0][5]++;
+						break;
+					case 2:
+						System.out.println("Time 1, Jogador " + oponente[0][pos] + " - PAPEL | GANHOU Time 2, Jogador "
+								+ oponente[1][pos] + " | TESOURA - " + "Time 2, Jogador " + oponente[1][pos]);
+						duelosVencidos[1][pos]++;
+						duelosVencidos[1][5]++;
+						break;
+					case 3:
+						System.out.println("Time 1, Jogador " + oponente[0][pos] + " - PAPEL | EMPATE | PAPEL - "
+								+ "Time 2, Jogador " + oponente[1][pos]);
+						break;
+					}
+					break;
+				}
+			}
 			try {
-				sleep(1000);
-				ganhador = verJogada();
+				sleep(500);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			if(ganhador == 1) ptA++;
-			if(ganhador == 2) ptB++;
 		}
-		
-		if(ptA>ptB) {
-			System.out.println(jogA+" fez "+ptA+" pontos, time A ganhou essa rodada");
-			Principal.totalA++;
-		}else {
-			System.out.println(jogB+" fez "+ptB+" pontos, time B ganhou essa rodada");
-			Principal.totalB++;
+		if (time == 0) {
+			if (duelosVencidos[0][pos] == 3) {
+				System.out.println("PONTUAÇÕES: Time 1, Jogador " + oponente[0][pos] + "[" + duelosVencidos[0][pos]
+						+ "] contra " + "Time 2, Jogador " + oponente[1][pos] + "[" + duelosVencidos[1][pos]
+						+ "] acaba vencendo : Time 1, Jogador " + oponente[0][pos]);
+				pontosTime[0]++;
+			} else {
+				System.out.println("PONTUAÇÕES: Time 1, Jogador " + oponente[0][pos] + "[" + duelosVencidos[0][pos]
+						+ "] contra " + "Time 2, Jogador " + oponente[1][pos] + "[" + duelosVencidos[1][pos]
+						+ "] acaba vencendo : Time 2, Jogador " + oponente[1][pos]);
+				pontosTime[1]++;
+			}
+			batalhas++;
 		}
-		System.out.println("TIME A POSSUI "+Principal.totalA+" PONTOS");
-		System.out.println("TIME B POSSUI "+Principal.totalB+" PONTOS");		
+		if (batalhas == 5) {
+			System.out.println("PONTOS TOTAIS");
+			System.out.println("Time 1 possui " + pontosTime[0] + " pontos e venceu "
+					+ duelosVencidos[0][5] + " vezes " + "\nTime 2 possui " + pontosTime[1]
+					+ " pontos e venceu " + duelosVencidos[1][5]+" vezes");
+			if (pontosTime[0] > pontosTime[1]) {
+				System.out.println("TIME 1 VENCEU");
+			} else {
+				System.out.println("TIME 2 VENCEU");
+			}
+		}
 	}
-
-	private int verJogada() {
-		int jogadaA = 0;
-		int jogadaB = 0;
-		String jogadas[] = { "pedra", "papel", "tesoura" };
-
-		// 1 = pedra
-		// 2 = papel
-		// 3 = tesoura
-
-		jogadaA = (int) ((Math.random() * 3) + 1);
-		jogadaB = (int) ((Math.random() * 3) + 1);
-
-		if (jogadaA == jogadaB) {
-			System.out.println(jogA + " jogou " + jogadas[jogadaA-1] + " e " + jogB + " jogou " + jogadas[jogadaB-1] + "\n");
-			System.out.println("EMPATE\n");
-			return 0;
-		} else if (jogadaA == 1 && jogadaB == 3) {
-			System.out.println(jogA + " jogou " + jogadas[jogadaA-1] + " e " + jogB + " jogou " + jogadas[jogadaB-1] + "\n");
-			System.out.println("GANHOU " + jogA);
-			return 1;
-		} else if (jogadaA == 2 && jogadaB == 1) {
-			System.out.println(jogA + " jogou " + jogadas[jogadaA-1] + " e " + jogB + " jogou " + jogadas[jogadaB-1] + "\n");
-			System.out.println("GANHOU " + jogA);
-			return 1;
-		} else if (jogadaA == 3 && jogadaB == 2) {
-			System.out.println(jogA + " jogou " + jogadas[jogadaA-1] + " e " + jogB + " jogou " + jogadas[jogadaB-1] + "\n");
-			System.out.println("GANHOU " + jogA);
-			return 1;
-		} else {
-			System.out.println(jogA + " jogou " + jogadas[jogadaA-1] + " e " + jogB + " jogou " + jogadas[jogadaB-1] + "\n");
-			System.out.println("GANHOU " + jogB);
-			return 2;
-		}
-
-	}
-
 }
